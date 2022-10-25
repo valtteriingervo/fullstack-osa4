@@ -1,0 +1,9 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "Teen-lyfe",
+  "author": "Johanna Juurikainen",
+  "url": "http://teen-lyfe.com",
+  "likes": 14
+}
