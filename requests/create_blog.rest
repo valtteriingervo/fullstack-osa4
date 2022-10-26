@@ -2,8 +2,8 @@ POST http://localhost:3003/api/blogs
 Content-Type: application/json
 
 {
-  "title": "Vihannesblogi",
-  "author": "Jarmo Juurimies",
-  "url": "http://porkkaanaa-ma-popsin.com",
-  "likes": 1
+  "title": "Car blog",
+  "author": "Jack Smith",
+  "url": "http://cool-cars-blog.com",
+  "likes": 52
 }
