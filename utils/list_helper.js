@@ -47,10 +47,34 @@ const mostBlogs = (blogs) => {
   return blogsByAuthor.find(authorObj => authorObj.blogs === maxBlogs)
 }
 
+const mostLikes = (blogs) => {
+  if (blogs.length === 0) {
+    return null
+  }
+
+  const authors = _.uniq(blogs.map(blog => blog.author))
+
+  const likesByAuthor = authors.reduce((objArray, author) => {
+    objArray.push({
+      author: author,
+      likes: blogs.reduce((likeSum, blog) => {
+        return blog.author === author ? likeSum + blog.likes : likeSum
+      }, 0)
+    })
+
+    return objArray
+  }, [])
+
+  const maxLikes = Math.max(...likesByAuthor.map(authorObj => authorObj.likes))
+
+  return likesByAuthor.find(authorObj => authorObj.likes === maxLikes)
+}
+
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }
 

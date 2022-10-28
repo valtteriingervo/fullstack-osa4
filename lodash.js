@@ -52,7 +52,7 @@ const blogs = [
 ]
 
 
-
+/*
 const authorsCount = blogs.map(blog => blog.author)
 const uniqueAuthors = _.uniq(authorsCount)
 
@@ -68,5 +68,24 @@ const blogsByAuthor = uniqueAuthors.reduce((objArray, author) => {
 const maxBlogs = Math.max(...blogsByAuthor.map(authorObj => authorObj.blogs))
 
 const authorWithMostBlogs = blogsByAuthor.find(authorObj => authorObj.blogs === maxBlogs)
+*/
 
-console.log(authorWithMostBlogs)
+
+const authors = _.uniq(blogs.map(blog => blog.author))
+
+const likesByAuthor = authors.reduce((objArray, author) => {
+  objArray.push({
+    author: author,
+    likes: blogs.reduce((likeSum, blog) => {
+      return blog.author === author ? likeSum + blog.likes : likeSum
+    }, 0)
+  })
+
+  return objArray
+}, [])
+
+const maxLikes = Math.max(...likesByAuthor.map(authorObj => authorObj.likes))
+
+const returnThis = likesByAuthor.find(authorObj => authorObj.likes === maxLikes)
+
+console.log(returnThis)

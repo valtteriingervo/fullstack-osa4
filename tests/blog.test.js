@@ -115,3 +115,23 @@ describe('most blogs', () => {
     expect(listHelper.mostBlogs(blogs)).toEqual(correctBlogReturn)
   })
 })
+
+describe('most likes', () => {
+  test('empty array should result in null', () => {
+    expect(listHelper.mostLikes([])).toBe(null)
+  })
+  test('single blog should return that blogs author and likes', () => {
+    const correctBlogReturn = {
+      author: 'Michael Chan',
+      likes: 7
+    }
+    expect(listHelper.mostLikes([blogs[0]])).toEqual(correctBlogReturn)
+  })
+  test('of multiple blogs should be returned the one blog, or one of, with the most likes', () => {
+    const correctBlogReturn = {
+      author: 'Edsger W. Dijkstra',
+      likes: 17
+    }
+    expect(listHelper.mostLikes(blogs)).toEqual(correctBlogReturn)
+  })
+})
