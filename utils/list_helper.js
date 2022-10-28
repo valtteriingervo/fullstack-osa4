@@ -1,4 +1,4 @@
-const blog = require("../models/blog")
+const _ = require('lodash')
 
 const dummy = (blogs) => {
   return 1
@@ -25,9 +25,32 @@ const favoriteBlog = (blogs) => {
   return blogs.find(blog => blog.likes === maxLikes)
 }
 
+// Return the author object with the most blogs
+const mostBlogs = (blogs) => {
+  if (blogs.length === 0) {
+    return null
+  }
+  const authorsCount = blogs.map(blog => blog.author)
+  const uniqueAuthors = _.uniq(authorsCount)
+
+  const blogsByAuthor = uniqueAuthors.reduce((objArray, author) => {
+    objArray.push({
+      author: author,
+      blogs: blogs.filter(blog => blog.author === author).length
+    })
+
+    return objArray
+  }, [])
+
+  const maxBlogs = Math.max(...blogsByAuthor.map(authorObj => authorObj.blogs))
+
+  return blogsByAuthor.find(authorObj => authorObj.blogs === maxBlogs)
+}
+
 module.exports = {
   dummy,
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs
 }
 
