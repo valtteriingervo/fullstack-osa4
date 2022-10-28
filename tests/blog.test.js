@@ -81,3 +81,17 @@ describe('total likes', () => {
     expect(listHelper.totalLikes(blogs)).toBe(36)
   })
 })
+
+describe('favorite blog', () => {
+  test('of empty list is null', () => {
+    expect(listHelper.favoriteBlog([])).toBe(null)
+  })
+
+  test('of single blog is the blog itself', () => {
+    expect(listHelper.favoriteBlog([blogs[3]])).toEqual(blogs[3])
+  })
+
+  test('of multiple blogs is the one, or one of, with the most likes', () => {
+    expect(listHelper.favoriteBlog(blogs)).toEqual(blogs[2])
+  })
+})
