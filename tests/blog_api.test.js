@@ -11,6 +11,7 @@ beforeEach(async () => {
   await Blog.insertMany(helper.initialBlogs)
 })
 
+// 4.8 tests
 test('blogs are returned as json', async () => {
   await api
     .get('/api/blogs')
@@ -22,6 +23,17 @@ test('correct amount of blogs is returned', async () => {
   const response = await api.get('/api/blogs')
 
   expect(response.body).toHaveLength(5)
+})
+
+// 4.9 test
+test('identifying field of blogs is called id', async () => {
+  const response = await api.get('/api/blogs')
+
+  const blogs = response.body
+
+  blogs.forEach(blog => {
+    expect(blog.id).toBeDefined()
+  })
 })
 
 afterAll(() => {
