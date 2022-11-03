@@ -36,6 +36,29 @@ test('identifying field of blogs is called id', async () => {
   })
 })
 
+// 4.10 test
+test('a valid blog can be added', async () => {
+  const newBlog = {
+    title: 'Cooking blog',
+    author: 'Saman Nashtri',
+    url: 'http://get-cooking.com',
+    likes: 28,
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201) // expect 201 Created
+    .expect('Content-Type', /application\/json/)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+
+  const blogTitles = blogsAtEnd.map(blog => blog.title)
+  expect(blogTitles).toContain('Cooking blog')
+
+})
+
 afterAll(() => {
   mongoose.connection.close()
 })
