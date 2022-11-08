@@ -59,6 +59,35 @@ test('a valid blog can be added', async () => {
 
 })
 
+// 4.11 test
+test('if no value given to likes, give it value of 0', async () => {
+  const blogWithoutLikesValue = {
+    title: 'Hunting Blog',
+    author: 'Johanna Newsom',
+    url: 'https://rifle-by-my-side.com'
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(blogWithoutLikesValue)
+    .expect(201) // expect 201 created
+    .expect('Content-Type', /application\/json/)
+
+  // There should be one more blog in the database
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+
+  // Likes field should be defined for all the blogs in DB
+  blogsAtEnd.forEach(blog => {
+    expect(blog.likes).toBeDefined()
+  })
+
+  // Likes field value should be 0 for the last blog added
+  const lastBlog = await helper.lastBlogAddedInDb()
+  expect(lastBlog.likes).toBe(0)
+
+})
+
 afterAll(() => {
   mongoose.connection.close()
 })
