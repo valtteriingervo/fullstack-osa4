@@ -60,7 +60,7 @@ test('a valid blog can be added', async () => {
 })
 
 // 4.11 test
-test('if no value given to likes, give it value of 0', async () => {
+test('value of 0 given to blog without likes set', async () => {
   const blogWithoutLikesValue = {
     title: 'Hunting Blog',
     author: 'Johanna Newsom',
@@ -85,7 +85,45 @@ test('if no value given to likes, give it value of 0', async () => {
   // Likes field value should be 0 for the last blog added
   const lastBlog = await helper.lastBlogAddedInDb()
   expect(lastBlog.likes).toBe(0)
+})
 
+// 4.12 tests
+test('blog added without title and url receives 400 bad request', async () => {
+  const blogWithoutTitleAndUrl = {
+    author: 'Jeremiah Burner',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(blogWithoutTitleAndUrl)
+    .expect(400) // Expect 400 bad request
+})
+
+test('blog added without title receives 400 bad request', async () => {
+  const blogWithoutTitle = {
+    author: 'Jeremiah Burner',
+    url: 'https://myhouseisonfire.com',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(blogWithoutTitle)
+    .expect(400) // Expect 400 bad request
+})
+
+test('blog added without url receives 400 bad request', async () => {
+  const blogWithoutTitle = {
+    author: 'Jeremiah Burner',
+    title: 'My house is on fire: How I learned to live with it',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(blogWithoutTitle)
+    .expect(400) // Expect 400 bad request
 })
 
 afterAll(() => {

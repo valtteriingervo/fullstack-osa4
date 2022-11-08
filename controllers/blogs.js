@@ -8,18 +8,25 @@ blogsRouter.get('/', async (request, response) => {
 })
 
 blogsRouter.post('/', async (request, response) => {
-  // If likes field is not defined, give it a value of zero
-  const blog = request.body.likes
-    ? new Blog(request.body)
-    : new Blog({
-      title: request.body.title,
-      author: request.body.author,
-      url: request.body.url,
-      likes: 0
-    })
+  const body = request.body
+  // If no title or URL given, return 400 bad request
+  if (!(body.title && body.url)) {
+    response.status(400).end()
+  }
+  else {
+    // If likes field is not defined, give it a value of zero
+    const blog = body.likes
+      ? new Blog(body)
+      : new Blog({
+        title: body.title,
+        author: body.author,
+        url: body.url,
+        likes: 0
+      })
 
-  const savedBlog = await blog.save()
-  response.status(201).json(savedBlog)
+    const savedBlog = await blog.save()
+    response.status(201).json(savedBlog)
+  }
 })
 
 module.exports = blogsRouter
