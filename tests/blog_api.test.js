@@ -150,6 +150,31 @@ describe('deleting blogs', () => {
   })
 })
 
+describe('changing existing blogs', () => {
+  test('updating likes for certain blog should work', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToUpdate = blogsAtStart[0]
+
+    const updatedLikesBlog = {
+      ...blogToUpdate,
+      likes: 890
+    }
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedLikesBlog)
+      .expect(200)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    // The length of blogs should be the same
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+    // The blog should now have the updated likes
+    const putBlog = blogsAtEnd.find(blog => blog.id === blogToUpdate.id)
+    expect(putBlog.likes).toBe(updatedLikesBlog.likes)
+
+  })
+})
 
 afterAll(() => {
   mongoose.connection.close()
