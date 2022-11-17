@@ -5,10 +5,14 @@ const app = require('../app')
 const api = supertest(app)
 
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 beforeEach(async () => {
   await Blog.deleteMany({})
   await Blog.insertMany(helper.initialBlogs)
+
+  await User.deleteMany({})
+  await User.insertMany(helper.initialUsers)
 })
 
 describe('blogs are received in correct format and quantity', () => {
@@ -173,6 +177,137 @@ describe('changing existing blogs', () => {
     const putBlog = blogsAtEnd.find(blog => blog.id === blogToUpdate.id)
     expect(putBlog.likes).toBe(updatedLikesBlog.likes)
 
+  })
+})
+
+describe('missing or too short values for user fields', () => {
+  test('adding duplicate username should return 400', async () => {
+    const invalidUser = {
+      username: 'blogLover',
+      name: 'Ilmari Juurinen',
+      password: 'juures_nauris'
+    }
+
+    await api
+      .post('/api/users')
+      .send(invalidUser)
+      .expect(400)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).not.toContain(invalidUser.name)
+  })
+
+  test('username missing should return 400', async () => {
+    const noUsernameUser = {
+      name: 'Ilmari Juurinen',
+      password: 'juures_nauris'
+    }
+
+    await api
+      .post('/api/users')
+      .send(noUsernameUser)
+      .expect(400)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).not.toContain(noUsernameUser.name)
+  })
+
+  test('password missing should return 400', async () => {
+    const noPasswordUser = {
+      username: 'ilmari_juuri98',
+      name: 'Ilmari Juurinen',
+    }
+
+    await api
+      .post('/api/users')
+      .send(noPasswordUser)
+      .expect(400)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).not.toContain(noPasswordUser.name)
+  })
+
+  test('too short username should return 400', async () => {
+    const invalidUser = {
+      username: 'i8',
+      name: 'Ilmari Juurinen',
+      password: 'juures_nauris'
+    }
+
+    await api
+      .post('/api/users')
+      .send(invalidUser)
+      .expect(400)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).not.toContain(invalidUser.name)
+  })
+
+  test('too short password should return 400', async () => {
+    const invalidUser = {
+      username: 'ilmari_juuri98',
+      name: 'Ilmari Juurinen',
+      password: 'ju'
+    }
+
+    await api
+      .post('/api/users')
+      .send(invalidUser)
+      .expect(400)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).not.toContain(invalidUser.name)
+  })
+
+  test('both username and password missing should return 400', async () => {
+    const invalidUser = {
+      name: 'Ilmari Juurinen',
+    }
+
+    await api
+      .post('/api/users')
+      .send(invalidUser)
+      .expect(400)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).not.toContain(invalidUser.name)
+  })
+
+  test('exactly 3 character username and password should result in 201 created', async () => {
+    const invalidUser = {
+      username: 'i98',
+      name: 'Ilmari Juurinen',
+      password: 'juu'
+    }
+
+    await api
+      .post('/api/users')
+      .send(invalidUser)
+      .expect(201)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(helper.initialUsers.length + 1)
+
+    const names = usersAtEnd.map(user => user.name)
+    expect(names).toContain(invalidUser.name)
   })
 })
 
