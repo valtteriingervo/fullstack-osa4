@@ -19,6 +19,7 @@ app.use(middleware.requestLogger)
 // t 4.20 middleware
 app.use(middleware.tokenExtractor)
 
+// Use userExtractor middleware only with /api/blogs routes
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)

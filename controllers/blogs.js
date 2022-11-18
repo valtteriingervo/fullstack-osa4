@@ -2,6 +2,7 @@ const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
+const middleware = require('../utils/middleware')
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog
@@ -54,20 +55,11 @@ blogsRouter.post('/', async (request, response) => {
 })
 
 // 4.21: Deletion should only be possible by the user who added the blog
-blogsRouter.delete('/:id', async (request, response) => {
-  // Check that some token is given
-  if (!request.token) {
-    return response.status(401).json({ error: 'token missing' })
-  }
-  // Check for token validity
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token missing or invalid' })
-  }
+blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
   // Fetch the blog by the given id
   const blog = await Blog.findById(request.params.id)
-  // Fetch the user with the given token
-  const user = await User.findById(decodedToken.id)
+  // Fetch the user who made the request
+  const user = request.user
 
   // The users ID must match the one in the blog
   if (blog.user._id.toString() === user._id.toString()) {
