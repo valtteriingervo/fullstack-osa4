@@ -11,16 +11,6 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
-/*
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
-*/
-
 blogsRouter.post('/', async (request, response) => {
   const body = request.body
   // If no title or URL given, return 400 bad request
@@ -60,9 +50,26 @@ blogsRouter.post('/', async (request, response) => {
   }
 })
 
+// 4.21: Deletion should only be possible by the user who added the blog
 blogsRouter.delete('/:id', async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id)
-  response.status(204).end()
+  // Check for token validity
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  if (!decodedToken.id) {
+    return response.status(401).json({ error: 'token missing or invalid' })
+  }
+  // Fetch the blog by the given id
+  const blog = await Blog.findById(request.params.id)
+  // Fetch the user with the given token
+  const user = await User.findById(decodedToken.id)
+
+  // The users ID must match the one in the blog
+  if (blog.user._id.toString() === user._id.toString()) {
+    await Blog.findByIdAndDelete(request.params.id)
+    return response.status(204).end()
+  }
+  else {
+    return response.status(401).json({ error: 'only user who added the blog can delete it' })
+  }
 })
 
 blogsRouter.put('/:id', async (request, response) => {
