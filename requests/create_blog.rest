@@ -2,8 +2,9 @@ POST http://localhost:3003/api/blogs
 Content-Type: application/json
 
 {
-  "title": "Friendship blog",
-  "author": "Jasmiina Yahlava",
-  "url": "http://friends-are-forever.com",
-  "likes": 199
+  "title": "Motorcycles In Germany",
+  "author": "Heidi Heigel",
+  "url": "http://motorcycles-in-germany.de",
+  "likes": 5,
+  "userId": "6374a28f12d861db8288413e"
 }
