@@ -18,9 +18,12 @@ blogsRouter.post('/', async (request, response) => {
     response.status(400).end()
   }
   else {
+    if (!request.token) {
+      return response.status(401).json({ error: 'token missing' })
+    }
     const decodedToken = jwt.verify(request.token, process.env.SECRET)
     if (!decodedToken.id) {
-      return response.status(401).json({ error: 'token missing or invalid' })
+      return response.status(401).json({ error: 'invalid token' })
     }
 
     const user = await User.findById(decodedToken.id)
@@ -52,6 +55,10 @@ blogsRouter.post('/', async (request, response) => {
 
 // 4.21: Deletion should only be possible by the user who added the blog
 blogsRouter.delete('/:id', async (request, response) => {
+  // Check that some token is given
+  if (!request.token) {
+    return response.status(401).json({ error: 'token missing' })
+  }
   // Check for token validity
   const decodedToken = jwt.verify(request.token, process.env.SECRET)
   if (!decodedToken.id) {
