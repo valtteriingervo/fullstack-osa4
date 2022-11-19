@@ -12,46 +12,38 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   const body = request.body
   // If no title or URL given, return 400 bad request
   if (!(body.title && body.url)) {
-    response.status(400).end()
+    return response.status(400).end()
   }
-  else {
-    if (!request.token) {
-      return response.status(401).json({ error: 'token missing' })
-    }
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-      return response.status(401).json({ error: 'invalid token' })
-    }
 
-    const user = await User.findById(decodedToken.id)
+  // Middleware userExtractor takes care of token validation and places the user in the request object
+  const user = request.user
 
-    const blog = body.likes
-      ? new Blog({
-        title: body.title,
-        author: body.author,
-        url: body.url,
-        likes: body.likes,
-        user: user._id
-      })
-      : new Blog({
-        title: body.title,
-        author: body.author,
-        url: body.url,
-        likes: 0, // If likes field is not defined, give it a value of zero
-        user: user._id
-      })
+  const blog = body.likes
+    ? new Blog({
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      likes: body.likes,
+      user: user._id
+    })
+    : new Blog({
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      likes: 0, // If likes field is not defined, give it a value of zero
+      user: user._id
+    })
 
-    const savedBlog = await blog.save()
-    // the blog must be saved also to the user document
-    user.blogs = user.blogs.concat(savedBlog._id)
-    await user.save()
+  const savedBlog = await blog.save()
+  // the blog must be saved also to the user document
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
 
-    response.status(201).json(savedBlog)
-  }
+  response.status(201).json(savedBlog)
 })
 
 // 4.21: Deletion should only be possible by the user who added the blog
