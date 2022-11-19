@@ -49,22 +49,26 @@ const tokenExtractor = (request, response, next) => {
 }
 
 const userExtractor = async (request, response, next) => {
-  // Check that request token exists
+  // Check that request token exists and points to a valid user
   if (!request.token) {
     return response.status(401).json({ error: 'token missing' })
   }
   // Check for token validity
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'invalid token' })
+  let decodedToken
+  try {
+    decodedToken = jwt.verify(request.token, process.env.SECRET)
+    // If there is no errors in jwt.verify, decodedToken.id is valid
+    // If there are errors, then the code execution jumps to the catch block and the line below is not executed
+    const user = await User.findById(decodedToken.id)
+    // insert user into the request object
+    request.user = user
+
+    // Move control to the next middleware
+    next()
   }
-
-  const user = await User.findById(decodedToken.id)
-  // insert user into the request object
-  request.user = user
-
-  // Move control to the next middleware
-  next()
+  catch (error) { // Catch errors in jwt.verify, e.g. invalid token and pass it to the error handler middleware
+    next(error)
+  }
 }
 
 module.exports = {
