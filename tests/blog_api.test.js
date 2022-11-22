@@ -60,7 +60,6 @@ const initUser = async () => {
 
   await newUser.save()
 
-  // Token of the user must be saved to test posting of blogs
   const userDetails = {
     username: newUser.username,
     id: newUser._id
@@ -70,8 +69,6 @@ const initUser = async () => {
 }
 
 describe.only('adding of blogs', () => {
-  // 1. Must make a new user in beforeEach
-  // 2. Save the user auth token to be used in multiple tests in this describe block
 
   beforeEach(async () => {
     await initUser()
@@ -86,7 +83,6 @@ describe.only('adding of blogs', () => {
       likes: 88
     }
 
-    // Token for user included in response body
     await api
       .post('/api/blogs')
       .set('Authorization', `bearer ${userToken}`)
