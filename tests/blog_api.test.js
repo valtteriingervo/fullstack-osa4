@@ -3,19 +3,19 @@ const mongoose = require('mongoose')
 const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const Blog = require('../models/blog')
 const User = require('../models/user')
 
-beforeEach(async () => {
-  await Blog.deleteMany({})
-  await Blog.insertMany(helper.initialBlogs)
 
-  await User.deleteMany({})
-  await User.insertMany(helper.initialUsers)
-})
-
-describe('blogs are received in correct format and quantity', () => {
+describe.only('blogs are received in correct format and quantity', () => {
+  // Scope beforeEach only to this describe block
+  beforeEach(async () => {
+    await Blog.deleteMany({})
+    await Blog.insertMany(helper.initialBlogs)
+  })
   // 4.8 tests
   test('blogs are returned as json', async () => {
     await api
@@ -42,33 +42,86 @@ describe('blogs are received in correct format and quantity', () => {
   })
 })
 
-describe('adding of blogs', () => {
-  // 4.10 test
+// A bit shady global variable use but token needs to be available
+// for multiple tests in different describe blocks
+let userToken
+
+const initUser = async () => {
+  // Delete possible previous users and blogs before tests
+  await Blog.deleteMany({})
+  await User.deleteMany({})
+
+  // Manually create and save a new user
+  const newUser = new User({
+    username: 'skaterBoy98',
+    name: 'John Dewey',
+    passwordHash: await bcrypt.hash('password', 10)
+  })
+
+  await newUser.save()
+
+  // Token of the user must be saved to test posting of blogs
+  const userDetails = {
+    username: newUser.username,
+    id: newUser._id
+  }
+  // Assign the token for the global variable
+  userToken = jwt.sign(userDetails, process.env.SECRET)
+}
+
+describe.only('adding of blogs', () => {
+  // 1. Must make a new user in beforeEach
+  // 2. Save the user auth token to be used in multiple tests in this describe block
+
+  beforeEach(async () => {
+    await initUser()
+  })
+
   test('a valid blog can be added', async () => {
-    const newBlog = {
-      title: 'Cooking blog',
-      author: 'Saman Nashtri',
-      url: 'http://get-cooking.com',
-      likes: 28,
+
+    const validBlog = {
+      title: 'Hunting Blog',
+      author: 'Johanna Newsom',
+      url: 'https://rifle-by-my-side.com',
+      likes: 88
+    }
+
+    // Token for user included in response body
+    await api
+      .post('/api/blogs')
+      .set('Authorization', `bearer ${userToken}`)
+      .send(validBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(1)
+
+    const blogTitles = blogsAtEnd.map(blog => blog.title)
+    expect(blogTitles).toContain(validBlog.title)
+
+  })
+
+  test('receive 401 unauthorized if no token in request', async () => {
+    const validBlog = {
+      title: 'Hunting Blog',
+      author: 'Johanna Newsom',
+      url: 'https://rifle-by-my-side.com',
+      likes: 88
     }
 
     await api
       .post('/api/blogs')
-      .send(newBlog)
-      .expect(201) // expect 201 Created
-      .expect('Content-Type', /application\/json/)
-
-    const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
-
-    const blogTitles = blogsAtEnd.map(blog => blog.title)
-    expect(blogTitles).toContain('Cooking blog')
-
+      .send(validBlog) // Leave out Authorization header
+      .expect(401)
   })
 })
 
-describe('handling of missing fields or values', () => {
-  // 4.11 test
+describe.only('handling of missing blog fields or values', () => {
+  beforeEach(async () => {
+    await initUser()
+  })
+
   test('value of 0 given to blog without likes set', async () => {
     const blogWithoutLikesValue = {
       title: 'Hunting Blog',
@@ -79,12 +132,13 @@ describe('handling of missing fields or values', () => {
     await api
       .post('/api/blogs')
       .send(blogWithoutLikesValue)
+      .set('Authorization', `bearer ${userToken}`)
       .expect(201) // expect 201 created
       .expect('Content-Type', /application\/json/)
 
-    // There should be one more blog in the database
+    // There should be one blog in DB
     const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+    expect(blogsAtEnd).toHaveLength(1)
 
     // Likes field should be defined for all the blogs in DB
     blogsAtEnd.forEach(blog => {
@@ -106,6 +160,7 @@ describe('handling of missing fields or values', () => {
     await api
       .post('/api/blogs')
       .send(blogWithoutTitleAndUrl)
+      .set('Authorization', `bearer ${userToken}`)
       .expect(400) // Expect 400 bad request
   })
 
@@ -119,6 +174,7 @@ describe('handling of missing fields or values', () => {
     await api
       .post('/api/blogs')
       .send(blogWithoutTitle)
+      .set('Authorization', `bearer ${userToken}`)
       .expect(400) // Expect 400 bad request
   })
 
@@ -132,6 +188,7 @@ describe('handling of missing fields or values', () => {
     await api
       .post('/api/blogs')
       .send(blogWithoutTitle)
+      .set('Authorization', `bearer ${userToken}`)
       .expect(400) // Expect 400 bad request
   })
 })
