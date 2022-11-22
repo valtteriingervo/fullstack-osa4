@@ -110,6 +110,13 @@ describe.only('adding of blogs', () => {
       .post('/api/blogs')
       .send(validBlog) // Leave out Authorization header
       .expect(401)
+
+    // Make sure the blog wasn't added into DB
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(0)
+
+    const blogTitles = blogsAtEnd.map(blog => blog.title)
+    expect(blogTitles).not.toContain(validBlog.title)
   })
 })
 
